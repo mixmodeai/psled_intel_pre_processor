@@ -519,8 +519,7 @@ class bro_intel_feed_verifier:
     def load_feed(self, feed):
         with open(feed) as f:
             for line in f:
-                t_line = line.rstrip('\n')
-                t_line = line.rstrip('\r')
+                t_line = line.rstrip('\r\n')
                 if len(t_line):
                     yield t_line
 
@@ -540,6 +539,28 @@ class bro_intel_feed_verifier:
     def header_exists(self, entry):
         return entry in self.header_fields
 
+def populate_existing_bro_feed(options):
+    if options.feed_file is not None and os.path.exists(options.feed_file):
+
+        new_out = open(options.new_file, 'w')
+        for index, l in enumerate(bifv.load_feed(options.feed_file)):
+            # Check the header
+            t_out = l
+            if index == 0:
+                if options.meta_desc is not None:
+                    t_out += '\tmeta.desc'
+
+                if options.meta_severity is not None:
+                    t_out += '\tmeta.severity'
+            else:
+                if options.meta_desc is not None:
+                    t_out += '\t' + options.meta_desc
+
+                if options.meta_severity is not None:
+                    t_out += '\t' + str(options.meta_severity)
+
+            new_out.write(t_out + '\n')
+        new_out.close()
 
 ###############################################################################
 # main()
